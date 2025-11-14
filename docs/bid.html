@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bid Generator</title>
+<style>
+ body { font-family: Arial, sans-serif; margin: 20px; }
+ input, button { margin: 5px; }
+ table { border-collapse: collapse; margin-top: 15px; }
+ th, td { border: 1px solid #ccc; padding: 5px 10px; }
+</style>
+</head>
+<body>
+<h1>Bid Generator</h1>
+<p>Upload a PDF containing quantity lines like "Wall length: 120", "Doors: 3", "Windows: 5", or upload a JSON file with quantities.</p>
+<label>Choose file (PDF or JSON): <input type="file" id="inputFile"></label><br>
+<label>Overhead (%): <input type="number" id="overhead" value="10"></label>
+<label>Contingency (%): <input type="number" id="contingency" value="5"></label><br>
+<button id="generateBtn">Generate Bid</button>
+<div id="output"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+// cost data
+const COST_DATA = {
+  wall_length: { materialCostPerUnit: 4, laborHoursPerUnit: 0.5, laborRate: 50 },
+  door: { materialCostPerUnit: 150, laborHoursPerUnit: 3, laborRate: 50 },
+  window: { materialCostPerUnit: 100, laborHoursPerUnit: 2, laborRate: 50 }
+};
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('inputFile');
+  const overheadPct = parseFloat(document.getElementById('overhead').value) || 0;
+  const contingencyPct = parseFloat(document.getElementById('contingency').value) || 0;
+  if (!fileInput.files.length) {
+    alert('Please select a file.');
+    return;
+  }
+  const file = fileInput.files[0];
+  let quantities = {};
+  if (file.name.toLowerCase().endsWith('.json')) {
+    // Read JSON file
+    const text = await file.text();
+    try {
+      quantities = JSON.parse(text);
+    } catch(err) {
+      alert('Invalid JSON file.');
+      return;
+    }
+  } else if (file.name.toLowerCase().endsWith('.pdf')) {
+    // Parse PDF using pdf.js
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let text = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const strings = content.items.map(item => item.str);
+        text += strings.join(' ');
+      }
+      // parse patterns
+      const patterns = {
+        wall_length: /Wall\s*length[:\s]+(\d+(?:\.\d+)?)/i,
+        door: /Doors?[:\s]+(\d+(?:\.\d+)?)/i,
+        window: /Windows?[:\s]+(\d+(?:\.\d+)?)/i
+      };
+      for (const key in patterns) {
+        const match = text.match(patterns[key]);
+        if (match) {
+          quantities[key] = parseFloat(match[1]);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error reading PDF file.');
+      return;
+    }
+  } else {
+    alert('Unsupported file type. Please upload a PDF or JSON file.');
+    return;
+  }
+  if (Object.keys(quantities).length === 0) {
+    alert('No quantities found. Ensure the PDF contains lines like "Wall length: 120".');
+    return;
+  }
+  // Compute bid
+  let totalMaterialCost = 0;
+  let totalLaborHours = 0;
+  let totalLaborCost = 0;
+  const lineItems = [];
+  for (const item in quantities) {
+    if (COST_DATA[item]) {
+      const q = quantities[item];
+      const data = COST_DATA[item];
+      const materialCost = q * data.materialCostPerUnit;
+      const laborHours = q * data.laborHoursPerUnit;
+      const laborCost = laborHours * data.laborRate;
+      const totalCost = materialCost + laborCost;
+      lineItems.push({ item, quantity: q, materialCost, laborHours, laborCost, totalCost });
+   <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bid Generator</title>
+<style>
+ body { font-family: Arial, sans-serif; margin: 20px; }
+ input, button { margin: 5px; }
+ table { border-collapse: collapse; margin-top: 15px; }
+ th, td { border: 1px solid #ccc; padding: 5px 10px; }
+</style>
+</head>
+<body>
+<h1>Bid Generator</h1>
+<p>Upload a PDF containing quantity lines like "Wall length: 120", "Doors: 3", "Windows: 5", or upload a JSON file with quantities.</p>
+<label>Choose file (PDF or JSON): <input type="file" id="inputFile"></label><br>
+<label>Overhead (%): <input type="number" id="overhead" value="10"></label>
+<label>Contingency (%): <input type="number" id="contingency" value="5"></label><br>
+<button id="generateBtn">Generate Bid</button>
+<div id="output"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+// cost data
+const COST_DATA = {
+  wall_length: { materialCostPerUnit: 4, laborHoursPerUnit: 0.5, laborRate: 50 },
+  door: { materialCostPerUnit: 150, laborHoursPerUnit: 3, laborRate: 50 },
+  window: { materialCostPerUnit: 100, laborHoursPerUnit: 2, laborRate: 50 }
+};
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('inputFile');
+  const overheadPct = parseFloat(document.getElementById('overhead').value) || 0;
+  const contingencyPct = parseFloat(document.getElementById('contingency').value) || 0;
+  if (!fileInput.files.length) {
+    alert('Please select a file.');
+    return;
+  }
+  const file = fileInput.files[0];
+  let quantities = {};
+  if (file.name.toLowerCase().endsWith('.json')) {
+    // Read JSON file
+    const text = await file.text();
+    try {
+      quantities = JSON.parse(text);
+    } catch(err) {
+      alert('Invalid JSON file.');
+      return;
+    }
+  } else if (file.name.toLowerCase().endsWith('.pdf')) {
+    // Parse PDF using pdf.js
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let text = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const strings = content.items.map(item => item.str);
+        text += strings.join(' ');
+      }
+      // parse patterns
+      const patterns = {
+        wall_length: /Wall\s*length[:\s]+(\d+(?:\.\d+)?)/i,
+        door: /Doors?[:\s]+(\d+(?:\.\d+)?)/i,
+        window: /Windows?[:\s]+(\d+(?:\.\d+)?)/i
+      };
+      for (const key in patterns) {
+        const match = text.match(patterns[key]);
+        if (match) {
+          quantities[key] = parseFloat(match[1]);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error reading PDF file.');
+      return;
+    }
+  } else {
+    alert('Unsupported file type. Please upload a PDF or JSON file.');
+    return;
+  }
+  if (Object.keys(quantities).length === 0) {
+    alert('No quantities found. Ensure the PDF contains lines like "Wall length: 120".');
+    return;
+  }
+  // Compute bid
+  let totalMaterialCost = 0;
+  let totalLaborHours = 0;
+  let totalLaborCost = 0;
+  const lineItems = [];
+  for (const item in quantities) {
+    if (COST_DATA[item]) {
+      const q = quantities[item];
+      const data = COST_DATA[item];
+      const materialCost = q * data.materialCostPerUnit;
+      const laborHours = q * data.laborHoursPerUnit;
+      const laborCost = laborHours * data.laborRate;
+      const totalCost = materialCost + laborCost;
+      lineItems.push({ item, quantity: q, materialCost, laborHours, laborCost, totalCost });
+      totalMaterialCost += materialCost;
+      totalLaborHours += laborHours;
+      totalLaborCost += laborCost;
+    }
+  }
+  const directCost = totalMaterialCost + totalLaborCost;
+  const overhead = directCost * (overheadPct / 100);
+  const contingency = directCost * (contingencyPct / 100);
+  const grandTotal = directCost + overhead + contingency;
+  // Display results
+  const outputDiv = document.getElementById('output');
+  let html = '<h2>Bid Results</h2>';
+  html += '<table><tr><th>Item</th><th>Quantity</th><th>Material Cost</th><th>Labor Hours</th><th>Labor Cost</th><th>Total</th></tr>';
+  lineItems.forEach(li => {
+    html += `<tr><td>${li.item}</td><td>${li.quantity}</td><td>$${li.materialCost.toFixed(2)}</td><td>${li.laborHours.toFixed(2)}</td><td>$${li.laborCost.toFixed(2)}</td><td>$${li.totalCost.toFixed(2)}</td></tr>`;
+  });
+  html += '</table>';
+  html += `<p><strong>Total material cost:</strong> $${totalMaterialCost.toFixed(2)}</p>`;
+  html += `<p><strong>Total labor hours:</strong> ${totalLaborHours.toFixed(2)}</p>`;
+  html += `<p><strong>Total labor cost:</strong> $${totalLaborCost.toFixed(2)}</p>`;
+  html += `<p><strong>Direct cost:</strong> $${directCost.toFixed(2)}</p>`;
+  html += `<p><strong>Overhead (${overheadPct}%):</strong> $${overhead.toFixed(2)}</p>`;
+  html += `<p><strong>Contingency (${contingencyPct}%):</strong> $${contingency.toFixed(2)}</p>`;
+  html += `<h3>Grand Total: $${grandTotal.toFixed(2)}</h3>`;
+  outputDiv.innerHTML = html;
+});
+</script>
+</body>
+</html>
+   totalMaterialCost += materialCost;
+      totalLaborHours += laborHours;
+      totalLaborCost += laborCost;
+    }
+  }
+  const directCost = totalMaterialCost + totalLaborCost;
+  const overhead = directCost * (overheadPct / 100);
+  const contingency = directCost * (contingencyPct / 100);
+  const grandTotal = directCost + overhead + contingency;
+  // Display results
+  const outputDiv = document.getElementById('output');
+  let html = '<h2>Bid Results</h2>';
+  html += '<table><tr><th>Item</th><th>Quantity</th><th>Material Cost</th><th>Labor Hours</th><th>Labor Cost</th><th>Total</th></tr>';
+  lineItems.forEach(li => {
+    html += `<tr><td>${li.item}</td><td>${li.quantity}</td><td>$${li.materialCost.toFixed(2)}</td><td>${li.laborHours.toFixed(2)}</td><td>$${li.laborCost.toFixed(2)}</td><td>$${li.totalCost.toFixed(2)}</td></tr>`;
+  });
+  html += '</table>';
+  html += `<p><strong>Total material cost:</strong> $${totalMaterialCost.toFixed(2)}</p>`;
+  html += `<p><strong>Total labor hours:</strong> ${totalLaborHours.toFixed(2)}</p>`;
+  html += `<p><strong>Total labor cost:</strong> $${totalLaborCost.toFixed(2)}</p>`;
+  html += `<p><strong>Direct cost:</strong> $${directCost.toFixed(2)}</p>`;
+  html += `<p><strong>Overhead (${overheadPct}%):</strong> $${overhead.toFixed(2)}</p>`;
+  html += `<p><strong>Contingency (${contingencyPct}%):</strong> $${contingency.toFixed(2)}</p>`;
+  html += `<h3>Grand Total: $${grandTotal.toFixed(2)}</h3>`;
+  outputDiv.innerHTML = html;
+});
+</script>
+</body>
+</html>
