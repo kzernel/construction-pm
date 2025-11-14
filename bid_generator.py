@@ -1,21 +1,16 @@
-"""
-Bid generation module for construction projects.
-
-This module provides functions to estimate material and labor costs based on
-quantity takeoff data. It defines a simple data structure for unit costs and
-calculates line-item costs, overhead, contingency, and grand totals.
-"""
+""" Bid generation module for construction projects. This module provides 
+functions to estimate material and labor costs based on quantity takeoff data.
+It defines a simple data structure for unit costs and calculates line-item 
+costs, overhead, contingency, and grand totals. """
 
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Any
-
 
 @dataclass
 class UnitCost:
     material_cost_per_unit: float
     labor_hours_per_unit: float
     labor_rate: float  # hourly labor rate
-
 
 @dataclass
 class LineItem:
@@ -25,7 +20,6 @@ class LineItem:
     labor_hours: float
     labor_cost: float
     total_cost: float
-
 
 def generate_bid(
     quantities: Dict[str, float],
@@ -58,6 +52,7 @@ def generate_bid(
         labor_hours = quantity * unit.labor_hours_per_unit
         labor_cost = labor_hours * unit.labor_rate
         total_cost = material_cost + labor_cost
+
         line_items.append(
             LineItem(
                 item=item,
@@ -88,7 +83,6 @@ def generate_bid(
         "grand_total": grand_total,
     }
 
-
 # Sample unit cost data for demonstration
 COST_DATA: Dict[str, UnitCost] = {
     "wall_length": UnitCost(material_cost_per_unit=4.0, labor_hours_per_unit=0.5, labor_rate=50.0),
@@ -96,10 +90,10 @@ COST_DATA: Dict[str, UnitCost] = {
     "window": UnitCost(material_cost_per_unit=100.0, labor_hours_per_unit=2.0, labor_rate=50.0),
 }
 
-
 if __name__ == "__main__":
     import argparse
     import json
+
     parser = argparse.ArgumentParser(
         description="Generate a bid estimate from quantity data."
     )
@@ -128,6 +122,7 @@ if __name__ == "__main__":
         default=0.05,
         help="Contingency percentage as a decimal (default 0.05 for 5%)",
     )
+
     args = parser.parse_args()
 
     quantities: Dict[str, float] = {}
@@ -136,9 +131,16 @@ if __name__ == "__main__":
             quantities = json.load(f)
     elif args.pdf:
         # Attempt to parse quantities from the PDF using takeoff_parser
-        from takeoff_parser import parse_pdf_for_quantities
-
-        quantities = parse_pdf_for_quantities(args.pdf)
+        try:
+            from takeoff_parser import parse_pdf_for_quantities
+        except ImportError as e:
+            raise SystemExit(
+                "Unable to import takeoff_parser. Make sure it is available."
+            ) from e
+        try:
+            quantities = parse_pdf_for_quantities(args.pdf)
+        except Exception as e:
+            raise SystemExit(f"Error parsing PDF: {e}") from e
     else:
         raise SystemExit("Please provide a --quantities-file or --pdf argument.")
 
