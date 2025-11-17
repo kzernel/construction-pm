@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Construction Resource Planner</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    label { display: block; margin-top: 0.5em; }
+    input, select { margin-top: 0.2em; padding: 0.4em; width: 100%; max-width: 300px; }
+    button { margin-top: 1em; padding: 0.5em 1em; }
+    #result { margin-top: 1em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Construction Resource Planner</h1>
+  <form id="plannerForm">
+    <label>
+      Estimated total labor hours:
+      <input type="number" id="totalHours" required min="0" step="any">
+    </label>
+    <label>
+      Start date:
+      <input type="date" id="startDate" required>
+    </label>
+    <label>
+      End date:
+      <input type="date" id="endDate" required>
+    </label>
+    <label>
+      Hours per day:
+      <input type="number" id="hoursPerDay" value="8" min="1">
+    </label>
+    <label>
+      Working days per week:
+      <select id="daysPerWeek">
+        <option value="5">5 (Mon–Fri)</option>
+        <option value="6">6 (Mon–Sat)</option>
+        <option value="7">7 (Every day)</option>
+      </select>
+    </label>
+    <label>
+      Holidays (comma-separated YYYY-MM-DD):
+      <input type="text" id="holidays" placeholder="2025-12-25, 2025-12-31">
+    </label>
+    <button id="calculateButton">Calculate resources</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    function parseHolidays(str) {
+      return str.split(',').map(function(s) {
+        return s.trim();
+      }).filter(function(s) { return s.length > 0; });
+    }
+
+    function calculateResources(totalHours, startDate, endDate, hoursPerDay, daysPerWeek, holidays) {
+      var start = new Date(startDate);
+      var end = new Date(endDate);
+      if (end < start) {
+        throw new Error("End date must be on or after start date");
+      }
+      var holidaySet = new Set(holidays.map(function(h) {
+        return new Date(h).toDateString();
+      }));
+      // Determine working weekdays: in JS getDay() 0=Sunday,1=Mon,...6=Sat
+      var workingWeekdays = new Set();
+      // For daysPerWeek N, we consider Monday (1) through N inclusive (1-based), but wrap at 7
+      for (var i = 0; i < daysPerWeek; i++) {
+        var day = (i + 1) % 7; // Monday=1 for i=0
+        workingWeekdays.add(day);
+      }
+      var workingDaysCount = 0;
+      for (var dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
+        var dayOfWeek = dt.getDay();
+        if (workingWeekdays.has(dayOfWeek) && !holidaySet.has(dt.toDateString())) {
+          workingDaysCount++;
+        }
+      }
+      var availableHours = workingDaysCount * hoursPerDay;
+      if (availableHours <= 0) {
+        throw new Error("No available working hours between dates");
+      }
+      return Math.ceil(totalHours / availableHours);
+    }
+
+    document.getElementById('calculateButton').addEventListener('click', function(e) {
+      e.preventDefault();
+      var totalHours = parseFloat(document.getElementById('totalHours').value);
+      var startDate = document.getElementById('startDate').value;
+      var endDate = document.getElementById('endDate').value;
+      var hoursPerDay = parseFloat(document.getElementById('hoursPerDay').value);
+      var daysPerWeek = parseInt(document.getElementById('daysPerWeek').value);
+      var holidays = parseHolidays(document.getElementById('holidays').value);
+      var resultDiv = document.getElementById('result');
+      try {
+        var resources = calculateResources(totalHours, startDate, endDate, hoursPerDay, daysPerWeek, holidays);
+        resultDiv.textContent = "Estimated resources required: " + resources;
+      } catch (err) {
+        resultDiv.textContent = "Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
